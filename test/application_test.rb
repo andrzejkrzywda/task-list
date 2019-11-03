@@ -1,13 +1,13 @@
-require 'rspec'
+require 'minitest/autorun'
 require 'stringio'
 require 'timeout'
 
 require_relative '../lib/task_list'
 
-describe 'application' do
+class ApplicationTest < Minitest::Test
   PROMPT = '> '
 
-  around :each do |example|
+  def setup
     @input_reader, @input_writer = IO.pipe
     @output_reader, @output_writer = IO.pipe
 
@@ -16,24 +16,22 @@ describe 'application' do
       application.run
     end
     @application_thread.abort_on_exception = true
+  end
 
-    example.run
-
+  def teardown
     @input_reader.close
     @input_writer.close
     @output_reader.close
     @output_writer.close
-  end
 
-  after :each do
-    next unless still_running?
+    return unless still_running?
     sleep 1
-    next unless still_running?
+    return unless still_running?
     @application_thread.kill
     raise 'The application is still running.'
   end
 
-  it 'works' do
+  def test_works
     Timeout::timeout 1 do
       execute('show')
 
@@ -64,23 +62,26 @@ describe 'application' do
 
       execute('show')
       read_lines(
-          'secrets',
-          '  [x] 1: Eat more donuts.',
-          '  [ ] 2: Destroy all humans.',
-          '',
-          'training',
-          '  [x] 3: Four Elements of Simple Design',
-          '  [ ] 4: SOLID',
-          '  [x] 5: Coupling and Cohesion',
-          '  [x] 6: Primitive Obsession',
-          '  [ ] 7: Outside-In TDD',
-          '  [ ] 8: Interaction-Driven Design',
-          ''
+        'secrets',
+        '  [x] 1: Eat more donuts.',
+        '  [ ] 2: Destroy all humans.',
+        '',
+        'training',
+        '  [x] 3: Four Elements of Simple Design',
+        '  [ ] 4: SOLID',
+        '  [x] 5: Coupling and Cohesion',
+        '  [x] 6: Primitive Obsession',
+        '  [ ] 7: Outside-In TDD',
+        '  [ ] 8: Interaction-Driven Design',
+        ''
       )
 
       execute('quit')
     end
   end
+
+  private
+
 
   def execute(command)
     read PROMPT
@@ -89,7 +90,7 @@ describe 'application' do
 
   def read(expected_output)
     actual_output = @output_reader.read(expected_output.length)
-    expect(actual_output).to eq expected_output
+    assert_equal(expected_output, actual_output)
   end
 
   def read_lines(*expected_output)
