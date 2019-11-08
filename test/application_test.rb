@@ -1,10 +1,12 @@
 require 'minitest/autorun'
+require 'mutant/minitest/coverage'
 require 'stringio'
 require 'timeout'
 
 require_relative '../lib/task_list'
 
 class ApplicationTest < Minitest::Test
+  cover 'TaskList*'
   PROMPT = '> '
 
   def setup
